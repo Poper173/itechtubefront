@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Watch Video - iTechTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .video-player-wrapper {
+            background: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+        .video-player {
+            width: 100%;
+            max-height: 70vh;
+            display: block;
+        }
+        .video-info-section {
+            border-bottom: 1px solid #444;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .action-buttons .btn {
+            margin-right: 10px;
+        }
+        .playlist-select-container {
+            min-width: 200px;
+        }
+        .related-video-card {
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .related-video-card:hover {
+            transform: translateY(-3px);
+        }
+        .thumbnail-overlay {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        .view-progress-bar {
+            height: 4px;
+            background: #444;
+            border-radius: 2px;
+            margin-top: 5px;
+        }
+        .view-progress-fill {
+            height: 100%;
+            background: var(--primary-red);
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <span class="logo">iTechTube</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item" id="dashboard-link" style="display: none;">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="search-link">Search</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav" id="auth-nav-links">
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register.html">Register</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav d-none" id="user-nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="video-logout-btn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Video Player Section -->
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Main Video Column -->
+            <div class="col-lg-8">
+                <div class="video-player-wrapper">
+                    <video id="video-player" class="video-player" preload="metadata" controls playsinline>
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+
+                <!-- Continue Watching Button (shown when resuming) -->
+                <button id="continue-btn" class="btn btn-danger mt-3" style="display: none;">
+                    Continue Watching
+                </button>
+
+                <!-- Video Info -->
+                <div class="video-info-section mt-3">
+                    <h2 class="text-yellow video-title" id="video-title">Loading...</h2>
+
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mt-3">
+                        <div class="video-meta">
+                            <span id="video-views" class="me-3">0 views</span>
+                            <span id="video-date" class="text-muted"></span>
+                            <span id="video-category" class="badge bg-secondary ms-2" style="display: none;"></span>
+                        </div>
+
+                        <div class="action-buttons d-flex align-items-center">
+                            <!-- Like button with heart icon and real-time count -->
+                            <button class="btn btn-outline-light btn-sm d-flex align-items-center gap-2" id="like-btn">
+                                <span id="like-icon">♡</span>
+                                <span class="likes-count">0</span>
+                            </button>
+
+                            <!-- Download button (for logged-in users) -->
+                            <button class="btn btn-outline-light btn-sm ms-2" id="download-btn" onclick="downloadVideo()" style="display: none;">
+                                ⬇️ Download
+                            </button>
+
+                            <!-- Add to Playlist (for logged in users) -->
+                            <div class="playlist-select-container ms-3" id="playlist-select-container" style="display: none;">
+                                <select class="form-select form-select-sm" id="add-to-playlist" onchange="handleAddToPlaylist(this.value)">
+                                    <option value="">+ Add to Playlist</option>
+                                </select>
+                            </div>
+
+                            <!-- Share button -->
+                            <button class="btn btn-outline-light btn-sm ms-2" onclick="shareVideo()">
+                                🔗 Share
+                            </button>
+
+                            <!-- Edit button (only for video owner) -->
+                            <button class="btn btn-outline-warning btn-sm ms-2" id="edit-video-btn" style="display: none;" onclick="editCurrentVideo()">
+                                ✏️ Edit
+                            </button>
+                        </div>
+                    </div>
+
+                    <hr style="border-color: #444;">
+
+                    <div class="d-flex align-items-start mt-3">
+                        <img id="user-avatar" src="" alt="User" class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        <div>
+                            <h5 id="user-name" class="mb-1">Loading...</h5>
+                            <p id="user-subscribers" class="text-muted small mb-2">Loading...</p>
+                            <p class="video-description" id="video-description">Loading description...</p>
+                        </div>
+                        <button class="btn btn-danger ms-auto" id="subscribe-btn" style="display: none;">
+                            Subscribe
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Videos Column -->
+            <div class="col-lg-4">
+                <h4 class="text-yellow mb-3">Related Videos</h4>
+                <div class="related-videos-list" id="related-videos-container">
+                    <div class="text-center text-muted">
+                        <div class="loading"></div>
+                        <p>Loading related videos...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal fade" id="shareModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title text-yellow">Share Video</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Copy the link below to share this video:</p>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="share-url" readonly>
+                        <button class="btn btn-danger" onclick="copyShareUrl()">Copy</button>
+                    </div>
+                    <div class="mt-3">
+                        <p class="mb-2">Share on:</p>
+                        <button class="btn btn-outline-primary btn-sm me-2" onclick="shareOnSocial('facebook')">
+                            Facebook
+                        </button>
+                        <button class="btn btn-outline-info btn-sm me-2" onclick="shareOnSocial('twitter')">
+                            Twitter
+                        </button>
+                        <button class="btn btn-outline-success btn-sm me-2" onclick="shareOnSocial('whatsapp')">
+                            WhatsApp
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="shareOnSocial('linkedin')">
+                            LinkedIn
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentVideo = null;
+        let currentVideoId = null;
+
+        // Get video ID from URL
+        function getVideoIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // Initialize video page
+        document.addEventListener('DOMContentLoaded', async function() {
+            currentVideoId = getVideoIdFromUrl();
+
+            if (!currentVideoId) {
+                showAlert('No video specified', 'danger');
+                setTimeout(() => window.location.href = 'index.html', 2000);
+                return;
+            }
+
+            updateAuthUI();
+
+            // Load video data
+            await loadVideoPage();
+
+            // Setup logout handler
+            document.getElementById('video-logout-btn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        });
+
+        /**
+         * Edit the current video (called from Edit button)
+         */
+        async function editCurrentVideo() {
+            if (currentVideo && typeof editVideo === 'function') {
+                await editVideo(currentVideo.id);
+            } else {
+                showAlert('Edit functionality not available', 'danger');
+            }
+        }
+
+        async function loadVideoPage() {
+            try {
+                // Load video details using enhanced function
+                currentVideo = await loadVideoDetails(currentVideoId);
+
+                if (!currentVideo) {
+                    showAlert('Video not found', 'danger');
+                    setTimeout(() => window.location.href = 'index.html', 2000);
+                    return;
+                }
+
+                // Update page title
+                document.title = `${currentVideo.title} - iTechTube`;
+
+                // Update video info
+                document.getElementById('video-title').textContent = currentVideo.title;
+                document.getElementById('video-views').textContent = `${formatNumber(currentVideo.views_count || 0)} views`;
+                document.getElementById('video-date').textContent = formatDate(currentVideo.created_at);
+                document.getElementById('video-description').textContent = currentVideo.description || 'No description';
+
+                // Update category badge
+                const categoryBadge = document.getElementById('video-category');
+                if (currentVideo.category) {
+                    categoryBadge.textContent = currentVideo.category.name;
+                    categoryBadge.style.display = 'inline-block';
+                } else {
+                    categoryBadge.style.display = 'none';
+                }
+
+                // Update user info
+                if (currentVideo.user) {
+                    document.getElementById('user-name').textContent = currentVideo.user.name;
+                    const avatar = document.getElementById('user-avatar');
+                    if (currentVideo.user.avatar) {
+                        avatar.src = `${STORAGE_URL}/${currentVideo.user.avatar}`;
+                    } else {
+                        avatar.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" viewBox="0 0 50 50"><circle fill="%23666" cx="25" cy="25" r="25"/><text fill="%23fff" font-size="20" x="50%" y="50%" text-anchor="middle" dy=".3em">${currentVideo.user.name.charAt(0).toUpperCase()}</text></svg>';
+                    }
+                    document.getElementById('user-subscribers').textContent = 'Content Creator';
+                }
+
+                // Check if current user is the video owner
+                const currentUser = getCurrentUser();
+                if (currentUser && currentVideo.user_id === currentUser.id) {
+                    document.getElementById('edit-video-btn').style.display = 'block';
+                }
+
+                // Increment view count (with real-time update)
+                // Only try to record watch progress if user is authenticated
+                if (isAuthenticated()) {
+                    try {
+                        const watchResponse = await apiRequest(`/videos/${currentVideoId}/watch`, {
+                            method: 'POST',
+                            body: JSON.stringify({ progress: 0, completed: false })
+                        });
+
+                        // Update view count UI from API response (real-time)
+                        const viewsElement = document.getElementById('video-views');
+                        if (viewsElement && currentVideo) {
+                            // Use the views_count from API response if available, otherwise increment locally
+                            const newViewsCount = watchResponse?.data?.views_count ||
+                                (currentVideo.views_count ? parseInt(currentVideo.views_count) + 1 : 1);
+                            viewsElement.textContent = `${formatNumber(newViewsCount)} views`;
+
+                            // Update local video object
+                            currentVideo.views_count = newViewsCount;
+                        }
+                    } catch (e) {
+                        console.log('View count increment skipped (not authenticated)');
+                    }
+                } else {
+                    // For non-authenticated users, just increment locally for display
+                    const viewsElement = document.getElementById('video-views');
+                    if (viewsElement && currentVideo) {
+                        const newViewsCount = currentVideo.views_count ? parseInt(currentVideo.views_count) + 1 : 1;
+                        viewsElement.textContent = `${formatNumber(newViewsCount)} views`;
+                    }
+                }
+
+                // Initialize video player - use video_url from enhanced loadVideoDetails
+                initializeVideoPlayer(currentVideoId, currentVideo.video_url);
+
+                // Load related videos
+                await loadRelatedVideos();
+
+                // Setup playlist dropdown if logged in
+                if (isAuthenticated()) {
+                    document.getElementById('playlist-select-container').style.display = 'block';
+                    await populatePlaylistSelect();
+                }
+
+                // Initialize like button
+                if (isAuthenticated()) {
+                    await initLikeButton(currentVideoId);
+                }
+
+                // Initialize subscription button
+                if (isAuthenticated()) {
+                    await initSubscriptionButton();
+                }
+
+                // Show download button for logged in users
+                if (isAuthenticated()) {
+                    document.getElementById('download-btn').style.display = 'block';
+                }
+
+            } catch (error) {
+                console.error('Error loading video:', error);
+                showAlert('Error loading video: ' + error.message, 'danger');
+            }
+        }
+
+        async function loadRelatedVideos() {
+            const container = document.getElementById('related-videos-container');
+
+            try {
+                // Load videos from the same category or latest videos
+                let videosData;
+                if (currentVideo.category_id) {
+                    videosData = await loadVideos(1, { category_id: currentVideo.category_id });
+                } else {
+                    videosData = await loadVideos(1);
+                }
+
+                let videos = [];
+                if (videosData?.data) {
+                    videos = videosData.data;
+                } else if (Array.isArray(videosData)) {
+                    videos = videosData;
+                }
+
+                // Filter out current video and take first 10
+                const relatedVideos = videos.filter(v => v.id != currentVideoId).slice(0, 10);
+
+                if (relatedVideos.length === 0) {
+                    container.innerHTML = '<p class="text-muted text-center">No related videos found</p>';
+                    return;
+                }
+
+                container.innerHTML = relatedVideos.map(video => {
+                    const thumbnail = video.thumbnail_path
+                        ? `${STORAGE_URL}/${video.thumbnail_path}`
+                        : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="112" viewBox="0 0 200 112"><rect fill="%23333" width="200" height="112"/><text fill="%23666" font-family="Arial" font-size="12" x="50%" y="50%" text-anchor="middle">No Thumbnail</text></svg>';
+
+                    return `
+                        <div class="card mb-2 related-video-card" onclick="window.location.href='video.html?id=${video.id}'">
+                            <div class="row g-0">
+                                <div class="col-5 position-relative">
+                                    <img src="${thumbnail}" class="img-fluid rounded" style="width: 100%; height: 70px; object-fit: cover;">
+                                    ${video.duration ? `<span class="thumbnail-overlay">${formatDuration(video.duration)}</span>` : ''}
+                                </div>
+                                <div class="col-7">
+                                    <div class="card-body p-2">
+                                        <h6 class="card-title small mb-1 text-white" style="line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            ${escapeHtml(video.title)}
+                                        </h6>
+                                        <p class="card-text small text-muted mb-0">${formatNumber(video.views_count || 0)} views</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading related videos:', error);
+                container.innerHTML = '<p class="text-danger">Error loading related videos</p>';
+            }
+        }
+
+        // Handle add to playlist
+        async function handleAddToPlaylist(playlistId) {
+            if (!playlistId) return;
+
+            if (!isAuthenticated()) {
+                showAlert('Please login to add videos to playlists', 'warning');
+                document.getElementById('add-to-playlist').value = '';
+                return;
+            }
+
+            try {
+                await addVideoToPlaylist(playlistId, currentVideoId);
+                document.getElementById('add-to-playlist').value = '';
+            } catch (error) {
+                console.error('Error adding to playlist:', error);
+            }
+        }
+
+        // Share video functions
+        function shareVideo() {
+            const shareUrl = window.location.href;
+            document.getElementById('share-url').value = shareUrl;
+            const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+            modal.show();
+        }
+
+        function copyShareUrl() {
+            const shareUrl = document.getElementById('share-url');
+            shareUrl.select();
+            document.execCommand('copy');
+            showAlert('Link copied to clipboard!', 'success');
+        }
+
+        function shareOnSocial(platform) {
+            const url = encodeURIComponent(window.location.href);
+            const title = encodeURIComponent(currentVideo?.title || 'Check out this video');
+            let shareUrl = '';
+
+            switch(platform) {
+                case 'facebook':
+                    shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+                    break;
+                case 'twitter':
+                    shareUrl = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+                    break;
+                case 'whatsapp':
+                    shareUrl = `https://wa.me/?text=${title}%20${url}`;
+                    break;
+                case 'linkedin':
+                    shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${url}`;
+                    break;
+            }
+
+            if (shareUrl) {
+                window.open(shareUrl, '_blank', 'width=600,height=400');
+            }
+        }
+
+        // Download video
+        async function downloadVideo() {
+            if (!isAuthenticated()) {
+                showAlert('Please login to download videos', 'warning');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/videos/${currentVideoId}/download`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Accept': 'video/*'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Download failed');
+                }
+
+                // Get blob from response
+                const blob = await response.blob();
+
+                // Create download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+
+                // Generate filename from video title
+                const fileName = currentVideo.title
+                    ? `${currentVideo.title.replace(/[^a-zA-Z0-9]/g, '_')}.mp4`
+                    : `video_${currentVideoId}.mp4`;
+
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                showAlert('Download started!', 'success');
+            } catch (error) {
+                console.error('Error downloading video:', error);
+                showAlert('Failed to download video: ' + error.message, 'danger');
+            }
+        }
+
+        // Subscribe/Unsubscribe user
+        async function toggleSubscription() {
+            if (!isAuthenticated()) {
+                showAlert('Please login to subscribe', 'warning');
+                return;
+            }
+
+            if (!currentVideo || !currentVideo.user) {
+                return;
+            }
+
+            const channelId = currentVideo.user.id;
+
+            try {
+                // apiRequest already returns parsed JSON
+                const result = await apiRequest(`/channels/${channelId}/subscribe`, {
+                    method: 'POST'
+                });
+
+                // Update subscribe button
+                const btn = document.getElementById('subscribe-btn');
+                if (result.data.subscribed) {
+                    btn.textContent = 'Subscribed';
+                    btn.classList.remove('btn-danger');
+                    btn.classList.add('btn-outline-danger');
+                    showAlert('Subscribed to channel!', 'success');
+                } else {
+                    btn.textContent = 'Subscribe';
+                    btn.classList.remove('btn-outline-danger');
+                    btn.classList.add('btn-danger');
+                    showAlert('Unsubscribed from channel', 'info');
+                }
+            } catch (error) {
+                console.error('Error toggling subscription:', error);
+                showAlert('Failed to update subscription: ' + error.message, 'danger');
+            }
+        }
+
+        // Initialize subscription button
+        async function initSubscriptionButton() {
+            if (!isAuthenticated()) {
+                return;
+            }
+
+            if (!currentVideo || !currentVideo.user) {
+                return;
+            }
+
+            // Don't show subscribe button for own videos
+            const currentUser = getCurrentUser();
+            if (currentVideo.user_id === currentUser.id) {
+                document.getElementById('subscribe-btn').style.display = 'none';
+                return;
+            }
+
+            try {
+                // apiRequest already returns parsed JSON
+                const result = await apiRequest(`/channels/${currentVideo.user.id}/subscription`, {
+                    method: 'GET'
+                });
+
+                const btn = document.getElementById('subscribe-btn');
+                btn.style.display = 'block';
+                btn.onclick = toggleSubscription;
+
+                if (result.data.subscribed) {
+                    btn.textContent = 'Subscribed';
+                    btn.classList.add('btn-outline-danger');
+                } else {
+                    btn.textContent = 'Subscribe';
+                    btn.classList.remove('btn-outline-danger');
+                }
+            } catch (error) {
+                console.error('Error checking subscription status:', error);
+            }
+        }
+
+        // Keyboard shortcuts for video player
+        document.addEventListener('keydown', function(e) {
+            const video = document.getElementById('video-player');
+            if (!video) return;
+
+            switch(e.key) {
+                case ' ':
+                case 'k':
+                    e.preventDefault();
+                    if (video.paused) {
+                        video.play();
+                    } else {
+                        video.pause();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    video.currentTime = Math.max(0, video.currentTime - 10);
+                    break;
+                case 'ArrowRight':
+                    video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    video.volume = Math.min(1, video.volume + 0.1);
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    video.volume = Math.max(0, video.volume - 0.1);
+                    break;
+                case 'm':
+                    video.muted = !video.muted;
+                    break;
+                case 'f':
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        video.requestFullscreen();
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
+

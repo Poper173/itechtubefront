@@ -1,0 +1,1 @@
+Route::get("/videos/{video}/simple-stream", [App\Http\Controllers\Api\SimpleStreamController::class, "stream"]);

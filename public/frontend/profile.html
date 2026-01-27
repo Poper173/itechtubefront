@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - iTechTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .profile-header {
+            background: linear-gradient(135deg, var(--dark-gray) 0%, var(--darker-gray) 100%);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary-red);
+        }
+        .stat-card {
+            background: var(--dark-gray);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-yellow);
+        }
+        .stat-label {
+            color: var(--light-gray);
+            font-size: 0.9rem;
+        }
+        .password-strength {
+            height: 5px;
+            border-radius: 3px;
+            margin-top: 5px;
+            transition: width 0.3s ease;
+        }
+        .password-strength.weak { background: var(--primary-red); width: 25%; }
+        .password-strength.medium { background: var(--primary-yellow); width: 50%; }
+        .password-strength.strong { background: var(--success-green); width: 75%; }
+        .password-strength.very-strong { background: #28a745; width: 100%; }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-play-circle text-yellow me-2"></i>
+                <span class="logo">iTechTube</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logout-btn">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Content -->
+    <div class="container mt-4">
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <div class="row align-items-center">
+                <div class="col-md-auto text-center">
+                    <img id="profile-avatar" src="" alt="Profile" class="profile-avatar mb-3 mb-md-0">
+                </div>
+                <div class="col-md">
+                    <h2 class="text-yellow mb-1" id="profile-name">Loading...</h2>
+                    <p class="text-muted mb-2" id="profile-email">Loading...</p>
+                    <p class="text-muted small mb-0">
+                        <i class="fas fa-calendar me-1"></i>
+                        Member since <span id="profile-joined">Loading...</span>
+                    </p>
+                </div>
+                <div class="col-md-auto mt-3 mt-md-0">
+                    <button class="btn btn-outline-light me-2" onclick="showEditProfileModal()">
+                        <i class="fas fa-edit me-1"></i> Edit Profile
+                    </button>
+                    <button class="btn btn-danger" onclick="showPasswordModal()">
+                        <i class="fas fa-lock me-1"></i> Change Password
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-videos">0</div>
+                    <div class="stat-label">My Videos</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-playlists">0</div>
+                    <div class="stat-label">Playlists</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-views">0</div>
+                    <div class="stat-label">Total Views</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-number" id="stat-likes">0</div>
+                    <div class="stat-label">Likes Received</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <a href="dashboard.html" class="text-decoration-none">
+                    <div class="card bg-dark h-100">
+                        <div class="card-body text-center py-4">
+                            <i class="fas fa-video fa-3x text-danger mb-3"></i>
+                            <h5 class="text-white">Manage Videos</h5>
+                            <p class="text-muted small mb-0">Upload, edit, or delete your videos</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="favorites.html" class="text-decoration-none">
+                    <div class="card bg-dark h-100">
+                        <div class="card-body text-center py-4">
+                            <i class="fas fa-heart fa-3x text-danger mb-3"></i>
+                            <h5 class="text-white">My Favorites</h5>
+                            <p class="text-muted small mb-0">Videos you've liked</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="history.html" class="text-decoration-none">
+                    <div class="card bg-dark h-100">
+                        <div class="card-body text-center py-4">
+                            <i class="fas fa-history fa-3x text-danger mb-3"></i>
+                            <h5 class="text-white">Watch History</h5>
+                            <p class="text-muted small mb-0">Videos you've watched</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title text-yellow">Edit Profile</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="edit-profile-form">
+                        <div class="mb-3 text-center">
+                            <img id="edit-avatar-preview" src="" class="rounded-circle mb-3"
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                            <div class="mb-3">
+                                <label for="edit-avatar" class="form-label">Profile Photo</label>
+                                <input type="file" class="form-control" id="edit-avatar" accept="image/*">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit-name" class="form-label">Display Name</label>
+                            <input type="text" class="form-control" id="edit-name" required maxlength="255">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="save-profile-btn" onclick="saveProfile()">
+                        Save Changes
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal fade" id="passwordModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title text-yellow">Change Password</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="password-form">
+                        <div class="mb-3">
+                            <label for="current-password" class="form-label">Current Password</label>
+                            <input type="password" class="form-control" id="current-password" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" id="new-password" required minlength="8"
+                                   oninput="checkPasswordStrength(this.value)">
+                            <div class="password-strength"></div>
+                            <small class="text-muted">Minimum 8 characters</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="confirm-password" class="form-label">Confirm New Password</label>
+                            <input type="password" class="form-control" id="confirm-password" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="save-password-btn" onclick="changePassword()">
+                        Update Password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Initialize profile page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            await loadProfile();
+
+            // Setup logout handler
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+
+            // Avatar preview
+            document.getElementById('edit-avatar').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('edit-avatar-preview').src = e.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        });
+
+        // Load user profile
+        async function loadProfile() {
+            try {
+                const user = await apiRequest('/user/profile');
+
+                // Update header
+                document.getElementById('profile-name').textContent = user.name;
+                document.getElementById('profile-email').textContent = user.email;
+                document.getElementById('profile-joined').textContent = formatDate(user.created_at);
+
+                // Update avatar
+                const avatar = document.getElementById('profile-avatar');
+                if (user.avatar_url) {
+                    avatar.src = user.avatar_url;
+                } else {
+                    avatar.src = `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><circle fill="%23666" cx="60" cy="60" r="60"/><text fill="%23fff" font-size="40" x="50%" y="50%" text-anchor="middle" dy=".3em">${user.name.charAt(0).toUpperCase()}</text></svg>`;
+                }
+
+                // Update edit form
+                document.getElementById('edit-name').value = user.name;
+                document.getElementById('edit-avatar-preview').src = avatar.src;
+
+                // Load stats
+                await loadStats();
+
+            } catch (error) {
+                showAlert('Error loading profile: ' + error.message, 'danger');
+            }
+        }
+
+        // Load user statistics
+        async function loadStats() {
+            try {
+                // Load videos count
+                const videosData = await loadMyVideos();
+                const videosCount = videosData?.data?.length || 0;
+                document.getElementById('stat-videos').textContent = videosCount;
+
+                // Calculate total views from videos
+                let totalViews = 0;
+                if (videosData?.data) {
+                    videosData.data.forEach(video => {
+                        totalViews += video.views_count || 0;
+                    });
+                }
+                document.getElementById('stat-views').textContent = formatNumber(totalViews);
+
+                // Load playlists count
+                const playlists = await loadPlaylists();
+                document.getElementById('stat-playlists').textContent = playlists?.length || 0;
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Show edit profile modal
+        function showEditProfileModal() {
+            const modal = new bootstrap.Modal(document.getElementById('editProfileModal'));
+            modal.show();
+        }
+
+        // Show password modal
+        function showPasswordModal() {
+            const modal = new bootstrap.Modal(document.getElementById('passwordModal'));
+            modal.show();
+        }
+
+        // Check password strength
+        function checkPasswordStrength(password) {
+            const strengthDiv = document.querySelector('.password-strength');
+            let strength = 0;
+
+            if (password.length >= 8) strength++;
+            if (password.length >= 12) strength++;
+            if (/[A-Z]/.test(password)) strength++;
+            if (/[0-9]/.test(password)) strength++;
+            if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+            strengthDiv.className = 'password-strength';
+            if (password.length === 0) {
+                strengthDiv.style.width = '0';
+            } else if (strength <= 2) {
+                strengthDiv.classList.add('weak');
+            } else if (strength === 3) {
+                strengthDiv.classList.add('medium');
+            } else if (strength === 4) {
+                strengthDiv.classList.add('strong');
+            } else {
+                strengthDiv.classList.add('very-strong');
+            }
+        }
+
+        // Save profile changes
+        async function saveProfile() {
+            const name = document.getElementById('edit-name').value.trim();
+            const avatarFile = document.getElementById('edit-avatar').files[0];
+
+            if (!name) {
+                showAlert('Please enter your name', 'danger');
+                return;
+            }
+
+            const btn = document.getElementById('save-profile-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading"></span> Saving...';
+            btn.disabled = true;
+
+            try {
+                const formData = new FormData();
+                formData.append('name', name);
+                if (avatarFile) {
+                    formData.append('avatar', avatarFile);
+                }
+
+                const response = await apiRequest('/user/profile', {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                // Update local user data
+                const currentUser = getCurrentUser();
+                if (currentUser) {
+                    currentUser.name = response.data.user.name;
+                    currentUser.avatar = response.data.user.avatar;
+                    currentUser.avatar_url = response.data.user.avatar_url;
+                    setCurrentUser(currentUser);
+                }
+
+                // Update UI
+                document.getElementById('profile-name').textContent = response.data.user.name;
+                document.getElementById('profile-avatar').src = response.data.user.avatar_url ||
+                    `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><circle fill="%23666" cx="60" cy="60" r="60"/><text fill="%23fff" font-size="40" x="50%" y="50%" text-anchor="middle" dy=".3em">${response.data.user.name.charAt(0).toUpperCase()}</text></svg>`;
+
+                showAlert('Profile updated successfully!', 'success');
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('editProfileModal'));
+                modal.hide();
+
+            } catch (error) {
+                showAlert('Failed to update profile: ' + error.message, 'danger');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        // Change password
+        async function changePassword() {
+            const currentPassword = document.getElementById('current-password').value;
+            const newPassword = document.getElementById('new-password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            if (!currentPassword || !newPassword || !confirmPassword) {
+                showAlert('Please fill in all password fields', 'danger');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showAlert('New passwords do not match', 'danger');
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                showAlert('Password must be at least 8 characters', 'danger');
+                return;
+            }
+
+            const btn = document.getElementById('save-password-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="loading"></span> Updating...';
+            btn.disabled = true;
+
+            try {
+                const response = await apiRequest('/user/password', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword,
+                        new_password_confirmation: confirmPassword
+                    })
+                });
+
+                showAlert('Password changed successfully!', 'success');
+
+                // Reset form
+                document.getElementById('password-form').reset();
+                document.querySelector('.password-strength').style.width = '0';
+
+                const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+                modal.hide();
+
+                // Logout user since tokens are revoked
+                showAlert('Please login again with your new password', 'info');
+                setTimeout(() => {
+                    logout();
+                }, 2000);
+
+            } catch (error) {
+                showAlert('Failed to change password: ' + error.message, 'danger');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
+

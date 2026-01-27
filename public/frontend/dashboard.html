@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - iTechTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .upload-progress { display: none; }
+        .upload-progress.active { display: block; }
+        /* Role-based visibility - hide creator features by default */
+        .creator-only { display: none !important; }
+        /* Show creator features only for creators and admins */
+        body.is-creator .creator-only,
+        body.is-admin .creator-only {
+            display: block !important;
+        }
+        /* YouTube-style Channel Header */
+        .channel-header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .channel-banner {
+            height: 200px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        .channel-banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .channel-banner-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+        .channel-info-section {
+            padding: 15px 20px;
+            display: flex;
+            align-items: flex-end;
+            gap: 20px;
+            position: relative;
+        }
+        .channel-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid #fff;
+            background: #333;
+            margin-top: -60px;
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .channel-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .channel-avatar-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+        }
+        .channel-details {
+            flex-grow: 1;
+            padding-bottom: 5px;
+        }
+        .channel-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0 0 5px 0;
+        }
+        .channel-stats {
+            display: flex;
+            gap: 20px;
+            color: #aaa;
+            font-size: 14px;
+        }
+        .channel-stats span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .channel-stats strong {
+            color: #fff;
+        }
+        .channel-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .live-badge {
+            background: #ff0000;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        /* Live chat panel for creator */
+        .creator-live-chat {
+            background: #1a1a1a;
+            border-radius: 12px;
+            height: 300px;
+            overflow-y: auto;
+        }
+        .creator-chat-message {
+            padding: 8px 12px;
+            border-bottom: 1px solid #333;
+        }
+        .creator-chat-message:last-child {
+            border-bottom: none;
+        }
+        .creator-chat-username {
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+        .creator-chat-time {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <span class="logo">iTechTube</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="favorites.html">myfavorites</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logout-btn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="container mt-4">
+        <!-- YouTube-style Channel Header (Creator Only) -->
+        <div class="channel-header creator-only" id="channel-header">
+            <div class="channel-banner" id="channel-banner">
+                <img id="channel-banner-img" src="" alt="Channel Banner" style="display: none;">
+                <div class="channel-banner-overlay"></div>
+            </div>
+            <div class="channel-info-section">
+                <div class="channel-avatar" id="channel-avatar">
+                    <img id="channel-avatar-img" src="" alt="Channel Avatar" style="display: none;">
+                    <div class="channel-avatar-placeholder" id="channel-avatar-placeholder">
+                        <span id="channel-avatar-initial">C</span>
+                    </div>
+                </div>
+                <div class="channel-details">
+                    <h1 class="channel-name" id="channel-display-name">Channel Name</h1>
+                    <div class="channel-stats">
+                        <span><strong id="channel-subscribers">0</strong> subscribers</span>
+                        <span><strong id="channel-videos">0</strong> videos</span>
+                        <span><strong id="channel-views">0</strong> total views</span>
+                    </div>
+                </div>
+                <div class="channel-actions">
+                    <span class="badge bg-secondary" id="stream-status-badge">Offline</span>
+                    <button class="btn btn-outline-light btn-sm" onclick="openChannelSettings()">⚙️ Settings</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-yellow">Welcome, <span id="user-name">User</span></h2>
+            <a href="index.html" class="btn btn-outline-light">Browse Videos</a>
+        </div>
+
+        <!-- Upload Video Section (Creator Only) -->
+        <div class="dashboard-card creator-only" id="upload-section">
+            <h4>📹 Upload New Video</h4>
+            <form id="upload-form">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="video-title" class="form-label">Video Title *</label>
+                            <input type="text" class="form-control" id="video-title" required
+                                   placeholder="Enter video title" maxlength="255">
+                        </div>
+                        <div class="mb-3">
+                            <label for="video-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="video-description" rows="4"
+                                      placeholder="Describe your video"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="video-category" class="form-label">Category *</label>
+                            <select class="form-control" id="video-category" required>
+                                <option value="">Loading categories...</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="video-file" class="form-label">Video File *</label>
+                            <input type="file" class="form-control" id="video-file" accept="video/*" required>
+                            <small class="text-muted">Max size: 500MB</small>
+                        </div>
+                        <div class="mb-3">
+                            <label for="video-thumbnail" class="form-label">Thumbnail (Optional)</label>
+                            <input type="file" class="form-control" id="video-thumbnail" accept="image/*">
+                        </div>
+                        <div class="d-grid mt-3">
+                            <button type="submit" class="btn btn-danger" id="upload-btn">
+                                🚀 Upload Video
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- My Videos Section -->
+        <div class="dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>🎬 My Videos</h4>
+                <button class="btn btn-outline-light btn-sm" onclick="loadMyVideosList()">🔄 Refresh</button>
+            </div>
+            <div class="row" id="my-videos-container">
+                <div class="col-12 text-center text-muted"><div class="loading"></div><p>Loading videos...</p></div>
+            </div>
+        </div>
+
+        <!-- Playlists Section -->
+        <div class="dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>📋 My Playlists</h4>
+                <div>
+                    <button class="btn btn-danger btn-sm me-2" data-bs-toggle="modal" data-bs-target="#createPlaylistModal">➕ Create Playlist</button>
+                    <button class="btn btn-outline-light btn-sm" onclick="loadPlaylistsList()">🔄 Refresh</button>
+                </div>
+            </div>
+            <div class="row" id="playlists-container">
+                <div class="col-12 text-center text-muted"><div class="loading"></div><p>Loading playlists...</p></div>
+            </div>
+        </div>
+
+        <!-- Watch History Section -->
+        <div class="dashboard-card">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>⏳ Continue Watching</h4>
+                <button class="btn btn-outline-light btn-sm" onclick="loadContinueWatchingList()">🔄 Refresh</button>
+            </div>
+            <div class="row" id="continue-watching-container">
+                <div class="col-12 text-center text-muted"><div class="loading"></div><p>Loading...</p></div>
+            </div>
+        </div>
+
+        <!-- Creator Channel Profile Section (Creator Only) -->
+        <div class="dashboard-card creator-only" id="creator-profile-panel">
+            <h4>👤 Creator Channel Profile</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Channel Name</label>
+                        <input type="text" class="form-control" id="channel-name" placeholder="Your Channel Name">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Channel Description</label>
+                        <textarea class="form-control" id="channel-description" rows="3" placeholder="Describe your channel"></textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Channel Avatar</label>
+                        <input type="file" class="form-control" id="channel-avatar-input" accept="image/*">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Channel Banner</label>
+                        <input type="file" class="form-control" id="channel-banner-input" accept="image/*">
+                    </div>
+                    <button class="btn btn-danger" onclick="updateChannelProfile()">Update Profile</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Go Live Section (Creator Only) -->
+        <div class="dashboard-card creator-only" id="go-live-panel">
+            <h4>🎥 Go Live & Stream Setup</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Stream Title</label>
+                        <input type="text" class="form-control" id="stream-title" placeholder="My Live Stream">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Category</label>
+                        <select class="form-control" id="stream-category">
+                            <option value="">Select Category</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label class="form-label">Stream Key</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="stream-key" readonly>
+                            <button class="btn btn-outline-light" onclick="regenerateStreamKey()">🔄 Reset</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-success" id="start-stream-btn" onclick="startStream()">🚀 Start Stream</button>
+                    <button class="btn btn-danger d-none" id="stop-stream-btn" onclick="stopStream()">⏹️ Stop Stream</button>
+                </div>
+            </div>
+            <div class="mt-3">
+                <span class="badge bg-secondary" id="current-stream-status">Offline</span>
+                <span class="ms-2">Duration: <span id="stream-duration">00:00:00</span></span>
+                <span class="ms-2"><i class="fas fa-eye me-1"></i>Viewers: <span id="live-viewer-count">0</span></span>
+            </div>
+
+            <!-- Live Chat Panel (shown when streaming) -->
+            <div id="live-chat-panel" class="mt-4" style="display: none;">
+                <h5 class="text-yellow mb-3">
+                    <i class="fas fa-comments me-2"></i>Live Chat
+                    <span class="badge bg-secondary ms-2" id="chat-message-count">0</span>
+                </h5>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="creator-live-chat" id="creator-chat-messages">
+                            <div class="creator-chat-message text-muted text-center">
+                                Chat messages will appear here...
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card bg-dark text-white h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">Stream Stats</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="text-muted small">Current Viewers</label>
+                                    <div class="h3 mb-0 text-danger" id="live-viewers-display">0</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="text-muted small">Stream Duration</label>
+                                    <div class="h5 mb-0" id="live-duration-display">00:00:00</div>
+                                </div>
+                                <div>
+                                    <label class="text-muted small">Messages</label>
+                                    <div class="h5 mb-0" id="chat-count-display">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Playlist Modal -->
+    <div class="modal fade" id="createPlaylistModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title text-yellow">Create New Playlist</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="create-playlist-form">
+                        <div class="mb-3">
+                            <label for="playlist-name" class="form-label">Playlist Name *</label>
+                            <input type="text" class="form-control" id="playlist-name" required placeholder="My Playlist" maxlength="255">
+                        </div>
+                        <div class="mb-3">
+                            <label for="playlist-description" class="form-label">Description</label>
+                            <textarea class="form-control" id="playlist-description" rows="3" placeholder="What's this playlist about?"></textarea>
+                        </div>
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" id="playlist-public">
+                            <label class="form-check-label" for="playlist-public">Make playlist public</label>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="create-playlist-btn">Create Playlist</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script>
+        // Dashboard initialization - Override inline functions with proper API calls
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const user = getCurrentUser();
+            if (user && document.getElementById('user-name')) {
+                document.getElementById('user-name').textContent = user.name;
+            }
+
+            // Apply role-based classes and visibility
+            const userRole = user?.role || 'user';
+            document.body.classList.add('is-' + userRole);
+            applyRoleBasedVisibility();
+
+            // Initialize dashboard with proper API calls
+            initializeDashboard(userRole);
+
+            // Start real-time stats polling for creators/admins
+            if (userRole === 'creator' || userRole === 'admin') {
+                startChannelStatsPolling();
+            }
+        });
+
+        // Override loadChannelHeader with proper API integration
+        async function loadChannelHeader() {
+            try {
+                const response = await apiRequest('/creator/channel');
+                console.log('Channel header API response:', response);
+
+                if (response.success && response.data) {
+                    const data = response.data;
+
+                    // Update channel name
+                    const channelNameEl = document.getElementById('channel-display-name');
+                    if (channelNameEl) {
+                        channelNameEl.textContent = data.channel_name || data.name || 'My Channel';
+                    }
+
+                    // Update user name in channel profile section
+                    const channelNameInput = document.getElementById('channel-name');
+                    if (channelNameInput) {
+                        channelNameInput.value = data.channel_name || '';
+                    }
+
+                    // Update channel description
+                    const channelDescInput = document.getElementById('channel-description');
+                    if (channelDescInput) {
+                        channelDescInput.value = data.channel_description || '';
+                    }
+
+                    // Update avatar
+                    const avatarImg = document.getElementById('channel-avatar-img');
+                    const avatarPlaceholder = document.getElementById('channel-avatar-placeholder');
+                    const avatarInitial = document.getElementById('channel-avatar-initial');
+
+                    if (data.avatar) {
+                        avatarImg.src = data.avatar;
+                        avatarImg.style.display = 'block';
+                        if (avatarPlaceholder) avatarPlaceholder.style.display = 'none';
+                    } else {
+                        avatarImg.style.display = 'none';
+                        if (avatarPlaceholder) {
+                            avatarPlaceholder.style.display = 'flex';
+                            const initial = (data.channel_name || data.name || 'C').charAt(0).toUpperCase();
+                            if (avatarInitial) avatarInitial.textContent = initial;
+                        }
+                    }
+
+                    // Update banner
+                    const bannerImg = document.getElementById('channel-banner-img');
+                    if (data.channel_banner) {
+                        bannerImg.src = data.channel_banner;
+                        bannerImg.style.display = 'block';
+                    } else {
+                        bannerImg.style.display = 'none';
+                    }
+
+                    // Update stats - use actual database counts
+                    document.getElementById('channel-subscribers').textContent = formatNumber(data.total_subscribers || 0);
+                    document.getElementById('channel-videos').textContent = formatNumber(data.videos_count || 0);
+                    document.getElementById('channel-views').textContent = formatNumber(data.total_views || 0);
+
+                    // Update stream status badge
+                    const statusBadge = document.getElementById('stream-status-badge');
+                    if (data.stream_status === 'live') {
+                        statusBadge.textContent = '🔴 LIVE';
+                        statusBadge.className = 'badge bg-danger live-badge';
+                    } else {
+                        statusBadge.textContent = 'Offline';
+                        statusBadge.className = 'badge bg-secondary';
+                    }
+
+                    // Update stream key if available
+                    const streamKeyInput = document.getElementById('stream-key');
+                    if (streamKeyInput && data.stream_key_masked) {
+                        streamKeyInput.value = data.stream_key_masked;
+                    }
+
+                    console.log('Channel header loaded successfully:', data);
+                } else {
+                    console.warn('Channel header API returned no data');
+                }
+            } catch (error) {
+                console.error('Error loading channel header:', error);
+            }
+        }
+
+        // Override loadMyVideosList with proper API integration
+        async function loadMyVideosList() {
+            const container = document.getElementById('my-videos-container');
+            if (!container) return;
+
+            container.innerHTML = '<div class="col-12 text-center text-muted"><div class="loading"></div><p>Loading videos...</p></div>';
+
+            try {
+                console.log('Loading my videos from API...');
+                const response = await loadMyVideos();
+                console.log('My Videos API Response:', response);
+
+                let videos = [];
+                if (response && response.data) {
+                    videos = response.data;
+                } else if (Array.isArray(response)) {
+                    videos = response;
+                }
+
+                if (videos && videos.length > 0) {
+                    container.innerHTML = videos.map(video => createVideoCard(video, true)).join('');
+                    console.log(`Loaded ${videos.length} videos`);
+                } else {
+                    container.innerHTML = '<div class="col-12 text-center text-muted"><p>No videos yet. Upload your first video!</p></div>';
+                }
+            } catch (error) {
+                console.error('Error loading my videos:', error);
+                container.innerHTML = '<div class="col-12 text-center text-danger">Error loading videos: ' + error.message + '</div>';
+            }
+        }
+
+        // Override loadContinueWatchingList with proper thumbnail handling
+        async function loadContinueWatchingList() {
+            const container = document.getElementById('continue-watching-container');
+            if (!container) return;
+
+            container.innerHTML = '<div class="col-12 text-center text-muted"><div class="loading"></div><p>Loading...</p></div>';
+
+            try {
+                const history = await loadContinueWatching();
+                console.log('Continue Watching API Response:', history);
+
+                if (history && history.length > 0) {
+                    container.innerHTML = history.map(item => {
+                        const v = item.video;
+                        const thumbnail = getVideoThumbnail(v);
+                        return `
+                            <div class="col-md-3 mb-3">
+                                <div class="card h-100">
+                                    <a href="video.html?id=${v.id}">
+                                        <img src="${thumbnail}" class="card-img-top video-thumbnail" alt="${escapeHtml(v.title)}"
+                                             onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22 viewBox=%220 0 400 200%22><rect fill=%22%23333%22 width=%22400%22 height=%22200%22/><text fill=%22%23666%22 font-family=%22Arial%22 font-size=%2220%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>No Thumbnail</text></svg>'">
+                                    </a>
+                                    <div class="card-body">
+                                        <h6 class="card-title">${escapeHtml(v.title)}</h6>
+                                        ${v.views_count ? `<small class="text-muted">${formatNumber(v.views_count)} views</small>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    container.innerHTML = '<div class="col-12 text-center text-muted">No watch history. Start watching some videos!</div>';
+                }
+            } catch (error) {
+                console.error('Error loading continue watching:', error);
+                container.innerHTML = '<div class="col-12 text-center text-danger">Error: ' + error.message + '</div>';
+            }
+        }
+
+        // Video Upload (Creator Only) - Updated with proper error handling
+        document.getElementById('upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            // Check if user can upload
+            const user = getCurrentUser();
+            if (user?.role !== 'creator' && user?.role !== 'admin') {
+                showAlert('Only creators can upload videos', 'warning');
+                return;
+            }
+
+            const title = document.getElementById('video-title').value.trim();
+            const description = document.getElementById('video-description').value.trim();
+            const categoryId = document.getElementById('video-category').value;
+            const videoFile = document.getElementById('video-file').files[0];
+            const thumbnailFile = document.getElementById('video-thumbnail').files[0];
+
+            if (!title || !categoryId || !videoFile) {
+                showAlert('Please fill in all required fields (title, category, video file)', 'danger');
+                return;
+            }
+
+            // Validate file size (max 500MB)
+            const maxSize = 500 * 1024 * 1024;
+            if (videoFile.size > maxSize) {
+                showAlert('Video file is too large. Maximum size is 500MB.', 'danger');
+                return;
+            }
+
+            const uploadBtn = document.getElementById('upload-btn');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<span class="loading"></span> Uploading...';
+
+            try {
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('description', description);
+                formData.append('category_id', categoryId);
+                formData.append('video', videoFile);
+                if (thumbnailFile) formData.append('thumbnail', thumbnailFile);
+
+                console.log('Starting video upload...');
+                await uploadVideo(formData, function(percent) {
+                    uploadBtn.innerHTML = '<span class="loading"></span> Uploading ' + Math.round(percent) + '%';
+                });
+
+                showAlert('Video uploaded successfully!', 'success');
+                document.getElementById('upload-form').reset();
+
+                // Refresh videos list
+                loadMyVideosList();
+
+                // Update channel stats
+                if (user?.role === 'creator' || user?.role === 'admin') {
+                    loadChannelHeader();
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                showAlert('Upload failed: ' + (error.message || 'Unknown error'), 'danger');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '🚀 Upload Video';
+            }
+        });
+
+        // Create Playlist
+        document.getElementById('create-playlist-btn').addEventListener('click', async function() {
+            const name = document.getElementById('playlist-name').value.trim();
+            if (!name) {
+                showAlert('Please enter a playlist name', 'warning');
+                return;
+            }
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Creating...';
+            try {
+                await createPlaylist(
+                    name,
+                    document.getElementById('playlist-description').value.trim(),
+                    document.getElementById('playlist-public').checked
+                );
+                showAlert('Playlist created successfully!', 'success');
+                const modal = bootstrap.Modal.getInstance(document.getElementById('createPlaylistModal'));
+                if (modal) modal.hide();
+                document.getElementById('create-playlist-form').reset();
+                loadPlaylistsList();
+            } catch (error) {
+                showAlert('Failed to create playlist: ' + error.message, 'danger');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Create Playlist';
+            }
+        });
+
+        // Delete Playlist
+        async function deletePlaylistHandler(id) {
+            if (!confirm('Are you sure you want to delete this playlist?')) return;
+            try {
+                await deletePlaylist(id);
+                showAlert('Playlist deleted', 'success');
+                loadPlaylistsList();
+            } catch (error) {
+                showAlert('Failed to delete playlist: ' + error.message, 'danger');
+            }
+        }
+
+        // Update Channel Profile (Creator Only)
+        async function updateChannelProfile() {
+            const user = getCurrentUser();
+            if (user?.role !== 'creator' && user?.role !== 'admin') {
+                showAlert('Only creators can update channel profile', 'warning');
+                return;
+            }
+
+            const channelName = document.getElementById('channel-name')?.value.trim();
+            const channelDescription = document.getElementById('channel-description')?.value.trim();
+            const channelAvatar = document.getElementById('channel-avatar-input')?.files[0];
+            const channelBanner = document.getElementById('channel-banner-input')?.files[0];
+
+            if (!channelName) {
+                showAlert('Please enter a channel name', 'warning');
+                return;
+            }
+
+            const btn = document.querySelector('#creator-profile-panel .btn-danger');
+            const originalText = btn?.innerHTML || 'Update Profile';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Updating...';
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('channel_name', channelName);
+                if (channelDescription) {
+                    formData.append('channel_description', channelDescription);
+                }
+                if (channelAvatar) {
+                    formData.append('avatar', channelAvatar);
+                }
+                if (channelBanner) {
+                    formData.append('channel_banner', channelBanner);
+                }
+
+                const response = await apiRequest('/creator/channel', {
+                    method: 'PUT',
+                    body: formData
+                });
+
+                if (response.success) {
+                    showAlert('Channel profile updated successfully!', 'success');
+                    // Reload channel header
+                    await loadChannelHeader();
+                } else {
+                    showAlert('Failed to update channel: ' + (response.message || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                showAlert('Error updating channel: ' + error.message, 'danger');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                }
+            }
+        }
+
+        // Regenerate Stream Key (Creator Only)
+        async function regenerateStreamKey() {
+            const user = getCurrentUser();
+            if (user?.role !== 'creator' && user?.role !== 'admin') {
+                showAlert('Only creators can manage streaming', 'warning');
+                return;
+            }
+
+            if (!confirm('Regenerate stream key? Current key will stop working.')) return;
+
+            try {
+                const response = await apiRequest('/creator/stream/regenerate-key', {
+                    method: 'POST'
+                });
+
+                if (response.success && response.data) {
+                    const keyInput = document.getElementById('stream-key');
+                    if (keyInput && response.data.stream_key_masked) {
+                        keyInput.value = response.data.stream_key_masked;
+                    }
+                    showToast('Stream key regenerated!', 'success');
+                    // Show full key once
+                    if (response.data.stream_key) {
+                        alert('Your new stream key (save this!): ' + response.data.stream_key);
+                    }
+                } else {
+                    showAlert('Failed to regenerate stream key', 'danger');
+                }
+            } catch (error) {
+                showAlert('Error regenerating stream key: ' + error.message, 'danger');
+            }
+        }
+
+        // Start Stream (Creator Only)
+        async function startStream() {
+            const user = getCurrentUser();
+            if (user?.role !== 'creator' && user?.role !== 'admin') {
+                showAlert('Only creators can start streams', 'warning');
+                return;
+            }
+
+            const title = document.getElementById('stream-title')?.value.trim();
+            if (!title) {
+                showAlert('Please enter a stream title', 'warning');
+                return;
+            }
+
+            try {
+                const response = await apiRequest('/creator/stream/start', {
+                    method: 'POST',
+                    body: JSON.stringify({ title: title })
+                });
+
+                if (response.success) {
+                    // Update UI
+                    document.getElementById('start-stream-btn')?.classList.add('d-none');
+                    document.getElementById('stop-stream-btn')?.classList.remove('d-none');
+
+                    const statusBadge = document.getElementById('current-stream-status');
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Live';
+                        statusBadge.className = 'badge bg-danger live-badge';
+                    }
+
+                    // Show live chat panel
+                    document.getElementById('live-chat-panel').style.display = 'block';
+
+                    // Reset chat
+                    document.getElementById('creator-chat-messages').innerHTML =
+                        '<div class="creator-chat-message text-muted text-center">Chat messages will appear here...</div>';
+                    document.getElementById('chat-message-count').textContent = '0';
+                    document.getElementById('chat-count-display').textContent = '0';
+
+                    // Start duration timer
+                    let seconds = 0;
+                    const durEl = document.getElementById('stream-duration');
+                    if (durEl) {
+                        durEl.textContent = '00:00:00';
+                    }
+
+                    // Start polling for stream status and chat
+                    startStreamStatusPolling();
+                    startStreamMonitor();
+
+                    showToast('Stream started!', 'success');
+                } else {
+                    showAlert('Failed to start stream: ' + (response.message || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                showAlert('Error starting stream: ' + error.message, 'danger');
+            }
+        }
+
+        // Stream monitoring variables
+        let streamMonitorInterval = null;
+        let lastChatMessageId = 0;
+        let totalChatMessages = 0;
+
+        // Start stream monitoring (viewers and chat)
+        function startStreamMonitor() {
+            if (streamMonitorInterval) {
+                clearInterval(streamMonitorInterval);
+            }
+
+            // Load initial monitor data
+            loadStreamMonitor();
+
+            // Poll every 3 seconds
+            streamMonitorInterval = setInterval(async function() {
+                await loadStreamMonitor();
+            }, 3000);
+        }
+
+        // Stop stream monitoring
+        function stopStreamMonitor() {
+            if (streamMonitorInterval) {
+                clearInterval(streamMonitorInterval);
+                streamMonitorInterval = null;
+            }
+            lastChatMessageId = 0;
+            totalChatMessages = 0;
+        }
+
+        // Load stream monitor data (viewers, duration, chat)
+        async function loadStreamMonitor() {
+            try {
+                const response = await apiRequest('/creator/stream/monitor');
+
+                if (response.success && response.data) {
+                    const data = response.data;
+
+                    // Update viewer count
+                    const viewersEl = document.getElementById('live-viewer-count');
+                    const viewersDisplayEl = document.getElementById('live-viewers-display');
+                    if (viewersEl) viewersEl.textContent = formatNumber(data.stream_viewers || 0);
+                    if (viewersDisplayEl) viewersDisplayEl.textContent = formatNumber(data.stream_viewers || 0);
+
+                    // Update duration
+                    const durEl = document.getElementById('stream-duration');
+                    const durDisplayEl = document.getElementById('live-duration-display');
+                    if (durEl && data.stream_duration_formatted) {
+                        durEl.textContent = data.stream_duration_formatted;
+                    }
+                    if (durDisplayEl && data.stream_duration_formatted) {
+                        durDisplayEl.textContent = data.stream_duration_formatted;
+                    }
+
+                    // Update chat messages
+                    if (data.recent_chat && data.recent_chat.length > 0) {
+                        updateCreatorChat(data.recent_chat);
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading stream monitor:', error);
+            }
+        }
+
+        // Update creator chat panel
+        function updateCreatorChat(messages) {
+            const chatContainer = document.getElementById('creator-chat-messages');
+            const wasAtBottom = chatContainer.scrollHeight - chatContainer.scrollTop - chatContainer.clientHeight < 50;
+
+            let newMessagesCount = 0;
+
+            messages.forEach(msg => {
+                // Skip if we already have this message
+                if (msg.id <= lastChatMessageId) return;
+
+                newMessagesCount++;
+                lastChatMessageId = Math.max(lastChatMessageId, msg.id);
+
+                // Create message element
+                const messageEl = document.createElement('div');
+                messageEl.className = 'creator-chat-message';
+
+                const time = msg.created_at ? formatTimeAgo(msg.created_at) : 'Just now';
+
+                messageEl.innerHTML = `
+                    <span class="creator-chat-username">${escapeHtml(msg.user_name || 'User')}</span>
+                    <span class="creator-chat-time">${time}</span>
+                    <p class="mb-0 text-light small">${escapeHtml(msg.message)}</p>
+                `;
+
+                // Clear placeholder if exists
+                const placeholder = chatContainer.querySelector('.text-muted.text-center');
+                if (placeholder) {
+                    placeholder.remove();
+                }
+
+                chatContainer.appendChild(messageEl);
+            });
+
+            // Update counts
+            if (newMessagesCount > 0) {
+                totalChatMessages += newMessagesCount;
+                document.getElementById('chat-message-count').textContent = totalChatMessages;
+                document.getElementById('chat-count-display').textContent = totalChatMessages;
+            }
+
+            // Scroll to bottom if was already at bottom
+            if (wasAtBottom || newMessagesCount > 0) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }
+
+        // Stop Stream (Creator Only)
+        async function stopStream() {
+            if (!confirm('Are you sure you want to end the stream?')) return;
+
+            try {
+                const response = await apiRequest('/creator/stream/stop', {
+                    method: 'POST'
+                });
+
+                if (response.success) {
+                    // Stop polling
+                    stopStreamStatusPolling();
+                    stopStreamMonitor();
+
+                    // Hide live chat panel
+                    document.getElementById('live-chat-panel').style.display = 'none';
+
+                    // Update UI
+                    document.getElementById('start-stream-btn')?.classList.remove('d-none');
+                    document.getElementById('stop-stream-btn')?.classList.add('d-none');
+
+                    const statusBadge = document.getElementById('current-stream-status');
+                    if (statusBadge) {
+                        statusBadge.textContent = 'Offline';
+                        statusBadge.className = 'badge bg-secondary';
+                    }
+
+                    const durEl = document.getElementById('stream-duration');
+                    if (durEl) durEl.textContent = '00:00:00';
+
+                    const viewersEl = document.getElementById('live-viewer-count');
+                    if (viewersEl) viewersEl.textContent = '0';
+
+                    // Clear title
+                    const titleInput = document.getElementById('stream-title');
+                    if (titleInput) titleInput.value = '';
+
+                    showToast('Stream ended', 'info');
+                } else {
+                    showAlert('Failed to end stream: ' + (response.message || 'Unknown error'), 'danger');
+                }
+            } catch (error) {
+                showAlert('Error ending stream: ' + error.message, 'danger');
+            }
+        }
+
+        // Open channel settings (scroll to profile section)
+        function openChannelSettings() {
+            const profileSection = document.getElementById('creator-profile-panel');
+            if (profileSection) {
+                profileSection.scrollIntoView({ behavior: 'smooth' });
+                // Flash the section to highlight it
+                profileSection.style.transition = 'box-shadow 0.3s';
+                profileSection.style.boxShadow = '0 0 20px rgba(255, 0, 0, 0.3)';
+                setTimeout(() => {
+                    profileSection.style.boxShadow = '';
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>
+

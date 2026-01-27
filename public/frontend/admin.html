@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - iTechTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        :root {
+            --admin-primary: #6366f1;
+            --admin-dark: #1e1e2d;
+            --admin-darker: #151521;
+            --admin-card: #27293d;
+        }
+        .admin-sidebar { background: var(--admin-darker); min-height: 100vh; }
+        .admin-nav-link { color: #9a9a9a; padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 12px; transition: all 0.2s; }
+        .admin-nav-link:hover, .admin-nav-link.active { background: rgba(99, 102, 241, 0.1); color: var(--admin-primary); }
+        .stat-card { background: var(--admin-card); border-radius: 12px; padding: 24px; }
+        .stat-icon { width: 56px; height: 56px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        .table-card { background: var(--admin-card); border-radius: 12px; overflow: hidden; }
+        .status-badge { padding: 6px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+        .status-pending { background: #ffd43b; color: #000; }
+        .status-approved, .status-active { background: #51cf66; color: #000; }
+        .status-rejected, .status-banned { background: #ff6b6b; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-2 admin-sidebar p-0">
+                <div class="p-3">
+                    <a href="index.html" class="d-flex align-items-center text-white text-decoration-none mb-4">
+                        <i class="fas fa-crown me-2" style="color: var(--admin-primary); font-size: 1.5rem;"></i>
+                        <span class="logo">iTechTube</span>
+                    </a>
+                    <small class="text-uppercase text-muted fw-bold d-block mb-3" style="font-size: 0.7rem;">Admin Panel</small>
+                    <nav class="nav flex-column">
+                        <a href="#" class="nav-link admin-nav-link active" data-section="dashboard"><i class="fas fa-home"></i> Dashboard</a>
+                        <a href="#" class="nav-link admin-nav-link" data-section="videos"><i class="fas fa-video"></i> Videos</a>
+                        <a href="#" class="nav-link admin-nav-link" data-section="users"><i class="fas fa-users"></i> Users</a>
+                        <a href="#" class="nav-link admin-nav-link" data-section="categories"><i class="fas fa-folder"></i> Categories</a>
+                    </nav>
+                </div>
+                <div class="mt-auto p-3 border-top border-secondary">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary rounded-circle me-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="fas fa-shield-alt"></i></div>
+                        <div><div id="admin-name" class="text-white small fw-bold">Admin</div><small class="text-muted">Administrator</small></div>
+                    </div>
+                    <button class="btn btn-outline-light btn-sm w-100 mt-3" onclick="logout()"><i class="fas fa-sign-out-alt me-1"></i> Logout</button>
+                </div>
+            </div>
+            <div class="col-md-10 bg-dark text-white p-4" style="background: var(--admin-dark) !important;">
+                <div id="dashboard-section">
+                    <h3 class="mb-4">Admin Dashboard</h3>
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between"><div><p class="text-muted mb-1">Total Videos</p><h2 class="text-white mb-0" id="stat-videos">0</h2></div><div class="stat-icon bg-primary text-white"><i class="fas fa-video"></i></div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between"><div><p class="text-muted mb-1">Total Users</p><h2 class="text-white mb-0" id="stat-users">0</h2></div><div class="stat-icon bg-success text-white"><i class="fas fa-users"></i></div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between"><div><p class="text-muted mb-1">Pending</p><h2 class="text-warning mb-0" id="stat-pending">0</h2></div><div class="stat-icon bg-warning text-dark"><i class="fas fa-clock"></i></div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="d-flex justify-content-between"><div><p class="text-muted mb-1">Total Views</p><h2 class="text-white mb-0" id="stat-views">0</h2></div><div class="stat-icon bg-info text-white"><i class="fas fa-eye"></i></div></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="table-card">
+                                <div class="p-3 border-bottom"><h5 class="mb-0">Pending Videos</h5></div>
+                                <div class="p-3" id="pending-videos-container"><div class="text-center text-muted py-4">Loading...</div></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="table-card">
+                                <div class="p-3 border-bottom"><h5 class="mb-0">New Users</h5></div>
+                                <div class="p-3" id="new-users-container"><div class="text-center text-muted py-4">Loading...</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="videos-section" class="d-none">
+                    <h3 class="mb-4">Video Management</h3>
+                    <div class="table-card">
+                        <div class="p-3" id="all-videos-container"><div class="text-center text-muted py-4">Loading videos...</div></div>
+                    </div>
+                </div>
+                <div id="users-section" class="d-none">
+                    <h3 class="mb-4">User Management</h3>
+                    <div class="table-card">
+                        <div class="p-3" id="users-container"><div class="text-center text-muted py-4">Loading users...</div></div>
+                    </div>
+                </div>
+                <div id="categories-section" class="d-none">
+                    <h3 class="mb-4">Category Management</h3>
+                    <div class="table-card p-4">
+                        <form id="category-form" class="mb-4">
+                            <div class="row g-3">
+                                <div class="col-md-4"><input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Category name" id="category-name" required></div>
+                                <div class="col-md-6"><input type="text" class="form-control bg-dark text-white border-secondary" placeholder="Description" id="category-desc"></div>
+                                <div class="col-md-2"><button type="submit" class="btn btn-primary w-100">Add</button></div>
+                            </div>
+                        </form>
+                        <div id="categories-container"><div class="text-center text-muted py-4">Loading...</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let allVideos = [], allUsers = [];
+        document.addEventListener('DOMContentLoaded', async function() {
+            if (!isAuthenticated()) return window.location.href = 'login.html';
+            const user = getCurrentUser();
+            if (!user || user.role !== 'admin') return redirectBasedOnRole();
+            document.getElementById('admin-name').textContent = user.name;
+            await loadDashboardData();
+            setupNavigation();
+        });
+        function setupNavigation() {
+            document.querySelectorAll('.admin-nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.dataset.section;
+                    document.querySelectorAll('[id$="-section"]').forEach(s => s.classList.add('d-none'));
+                    document.getElementById(section + '-section').classList.remove('d-none');
+                    document.querySelectorAll('.admin-nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                    if (section === 'videos') loadAllVideos();
+                    if (section === 'users') loadAllUsers();
+                    if (section === 'categories') loadCategories();
+                });
+            });
+        }
+        async function loadDashboardData() {
+            try {
+                const [statsRes, pendingVideosRes, recentUsersRes] = await Promise.all([
+                    apiRequest('/admin/stats'),
+                    apiRequest('/admin/videos/pending'),
+                    apiRequest('/admin/users/recent')
+                ]);
+
+                const stats = statsRes.data || {};
+                const pendingVideos = pendingVideosRes.data || [];
+                const recentUsers = recentUsersRes.data || [];
+
+                allVideos = pendingVideos;
+                allUsers = recentUsers;
+
+                document.getElementById('stat-videos').textContent = stats.total_videos || 0;
+                document.getElementById('stat-users').textContent = stats.total_users || 0;
+                document.getElementById('stat-pending').textContent = stats.pending_videos || 0;
+                document.getElementById('stat-views').textContent = formatNumber(stats.total_views || 0);
+
+                renderPendingVideos(pendingVideos.slice(0, 5));
+                renderNewUsers(recentUsers.slice(0, 5));
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+                showAlert('Error loading dashboard data: ' + error.message, 'danger');
+            }
+        }
+        function renderPendingVideos(videos) {
+            const container = document.getElementById('pending-videos-container');
+            if (videos.length === 0) return container.innerHTML = '<div class="text-center text-muted py-4">No pending videos</div>';
+            container.innerHTML = '<div class="list-group list-group-flush">' + videos.map(video => `
+                <div class="list-group-item bg-dark text-white border-secondary d-flex align-items-center">
+                    <img src="${getVideoThumbnail(video)}" alt="" style="width: 80px; height: 45px; object-fit: cover;" class="me-3 rounded">
+                    <div class="flex-grow-1"><h6 class="mb-1">${escapeHtml(video.title)}</h6><small class="text-muted">${video.user?.name || 'Unknown'}</small></div>
+                    <div class="btn-group"><button class="btn btn-sm btn-success" onclick="approveVideo(${video.id})"><i class="fas fa-check"></i></button><button class="btn btn-sm btn-danger" onclick="rejectVideo(${video.id})"><i class="fas fa-times"></i></button></div>
+                </div>`).join('') + '</div>';
+        }
+        function renderNewUsers(users) {
+            const container = document.getElementById('new-users-container');
+            if (users.length === 0) return container.innerHTML = '<div class="text-center text-muted py-4">No users</div>';
+            container.innerHTML = '<div class="list-group list-group-flush">' + users.map(user => `
+                <div class="list-group-item bg-dark text-white border-secondary d-flex align-items-center">
+                    <div class="bg-primary rounded-circle me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;"><i class="fas fa-user"></i></div>
+                    <div class="flex-grow-1"><h6 class="mb-0">${escapeHtml(user.name)}</h6><small class="text-muted">${user.email}</small></div>
+                    <span class="status-badge status-${user.is_active === 0 ? 'banned' : 'active'}">${user.role}</span>
+                </div>`).join('') + '</div>';
+        }
+        function loadAllVideos() {
+            const container = document.getElementById('all-videos-container');
+            container.innerHTML = '<div class="text-center text-muted py-4"><div class="loading"></div><p>Loading videos...</p></div>';
+
+            apiRequest('/admin/videos').then(response => {
+                const videos = response.data || [];
+                allVideos = videos;
+                if (videos.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-4">No videos</div>';
+                    return;
+                }
+                container.innerHTML = '<div class="table-responsive"><table class="table table-dark"><thead><tr><th>Video</th><th>User</th><th>Views</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + videos.map(video => `
+                    <tr><td><div class="d-flex align-items-center"><img src="${getVideoThumbnail(video)}" alt="" style="width: 60px; height: 34px; object-fit: cover;" class="me-2 rounded"><span>${escapeHtml(video.title?.substring(0, 30) || 'Untitled')}</span></div></td>
+                    <td>${video.user?.name || 'Unknown'}</td><td>${formatNumber(video.views_count || 0)}</td>
+                    <td><span class="status-badge status-${video.status || 'pending'}">${video.status || 'Pending'}</span></td>
+                    <td><div class="btn-group">${video.status !== 'approved' ? `<button class="btn btn-sm btn-success" onclick="approveVideo(${video.id})"><i class="fas fa-check"></i></button>` : ''}${video.status !== 'rejected' ? `<button class="btn btn-sm btn-danger" onclick="rejectVideo(${video.id})"><i class="fas fa-times"></i></button>` : ''}<button class="btn btn-sm btn-outline-danger" onclick="deleteVideo(${video.id})"><i class="fas fa-trash"></i></button></div></td></tr>`).join('') + '</tbody></table></div>';
+            }).catch(error => {
+                container.innerHTML = '<div class="text-center text-danger py-4">Error loading videos</div>';
+            });
+        }
+        function loadAllUsers() {
+            const container = document.getElementById('users-container');
+            container.innerHTML = '<div class="text-center text-muted py-4"><div class="loading"></div><p>Loading users...</p></div>';
+
+            apiRequest('/admin/users').then(response => {
+                const users = response.data || [];
+                allUsers = users;
+                if (users.length === 0) {
+                    container.innerHTML = '<div class="text-center text-muted py-4">No users</div>';
+                    return;
+                }
+                container.innerHTML = '<div class="table-responsive"><table class="table table-dark"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + users.map(user => `
+                    <tr><td>${escapeHtml(user.name)}</td><td>${user.email}</td><td><span class="badge bg-secondary">${user.role}</span></td><td><span class="status-badge status-${user.is_active === 0 ? 'banned' : 'active'}">${user.is_active === 0 ? 'Banned' : 'Active'}</span></td>
+                    <td><div class="btn-group">${user.role !== 'admin' ? `<button class="btn btn-sm btn-outline-warning" onclick="toggleUserStatus(${user.id})"><i class="fas fa-ban"></i></button>` : ''}<button class="btn btn-sm btn-outline-info" onclick="changeUserRole(${user.id})"><i class="fas fa-user-cog"></i></button></div></td></tr>`).join('') + '</tbody></table></div>';
+            }).catch(error => {
+                container.innerHTML = '<div class="text-center text-danger py-4">Error loading users</div>';
+            });
+        }
+        async function approveVideo(videoId) {
+            try {
+                await apiRequest(`/admin/videos/${videoId}/approve`, { method: 'POST' });
+                showAlert('Video approved!', 'success');
+                await loadDashboardData();
+                if (document.getElementById('videos-section').classList.contains('d-none') === false) {
+                    loadAllVideos();
+                }
+            } catch (e) {
+                showAlert('Failed: ' + e.message, 'danger');
+            }
+        }
+        async function rejectVideo(videoId) {
+            try {
+                await apiRequest(`/admin/videos/${videoId}/reject`, { method: 'POST' });
+                showAlert('Video rejected', 'info');
+                await loadDashboardData();
+                if (document.getElementById('videos-section').classList.contains('d-none') === false) {
+                    loadAllVideos();
+                }
+            } catch (e) {
+                showAlert('Failed: ' + e.message, 'danger');
+            }
+        }
+        async function deleteVideo(videoId) {
+            if (!confirm('Delete this video?')) return;
+            try {
+                await apiRequest(`/admin/videos/${videoId}`, { method: 'DELETE' });
+                showAlert('Video deleted', 'success');
+                await loadDashboardData();
+                loadAllVideos();
+            } catch (e) {
+                showAlert('Failed: ' + e.message, 'danger');
+            }
+        }
+        async function toggleUserStatus(userId) {
+            try {
+                await apiRequest(`/admin/users/${userId}/toggle-status`, { method: 'POST' });
+                showAlert('User status updated', 'success');
+                loadAllUsers();
+            } catch (e) {
+                showAlert('Failed: ' + e.message, 'danger');
+            }
+        }
+        async function changeUserRole(userId) {
+            const newRole = prompt('Enter new role (user, creator, admin):');
+            if (!newRole || !['user', 'creator', 'admin'].includes(newRole)) return;
+            try {
+                await apiRequest(`/admin/users/${userId}/role`, { method: 'POST', body: JSON.stringify({ role: newRole }) });
+                showAlert('Role updated', 'success');
+                loadAllUsers();
+            } catch (e) {
+                showAlert('Failed: ' + e.message, 'danger');
+            }
+        }
+        async function loadCategories() { const container = document.getElementById('categories-container'); try { const response = await apiRequest('/categories'); const categories = response.data || []; if (categories.length === 0) return container.innerHTML = '<div class="text-center text-muted py-4">No categories</div>'; container.innerHTML = '<div class="row g-3">' + categories.map(cat => `<div class="col-md-4"><div class="p-3 bg-dark rounded"><h6 class="mb-1">${escapeHtml(cat.name)}</h6><small class="text-muted">${cat.description || ''}</small><small class="d-block text-muted">${cat.video_count || 0} videos</small></div></div>`).join('') + '</div>'; } catch (e) { container.innerHTML = '<div class="text-danger">Error loading categories</div>'; } }
+        document.getElementById('category-form').addEventListener('submit', async (e) => { e.preventDefault(); const name = document.getElementById('category-name').value; const description = document.getElementById('category-desc').value; try { await apiRequest('/categories', { method: 'POST', body: JSON.stringify({ name, description }) }); showAlert('Category added!', 'success'); document.getElementById('category-name').value = ''; document.getElementById('category-desc').value = ''; loadCategories(); } catch (e) { showAlert('Failed: ' + e.message, 'danger'); } });
+    </script>
+</body>
+</html>
+

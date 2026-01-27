@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - iTechTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .role-selection {
+            display: flex;
+            gap: 15px;
+        }
+        .role-option {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #444;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .role-option:hover {
+            border-color: #ffc107;
+        }
+        .role-option input:checked + label {
+            color: #ffc107;
+        }
+        .role-option:has(input:checked) {
+            border-color: #ffc107;
+            background-color: rgba(255, 193, 7, 0.1);
+        }
+        @media (max-width: 576px) {
+            .role-selection {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <span class="logo">iTechTube</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav" id="auth-nav-links">
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="register.html">Register</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Register Section -->
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6 col-lg-5">
+                <div class="card bg-dark text-white">
+                    <div class="card-header bg-black text-center py-3">
+                        <h4 class="mb-0 text-yellow">
+                            <i class="fas fa-user-plus me-2"></i>Create Account
+                        </h4>
+                    </div>
+                    <div class="card-body p-4">
+                        <form id="register-form">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary border-secondary">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="name" required minlength="2" maxlength="255" placeholder="Enter your name">
+                                </div>
+                                <div class="form-text text-muted">This name will be displayed publicly</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email Address</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary border-secondary">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <input type="email" class="form-control" id="email" required placeholder="Enter your email">
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary border-secondary">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password" required minlength="8" placeholder="Create password">
+                                    <button type="button" class="btn btn-outline-secondary toggle-password" tabindex="-1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text text-muted">Minimum 8 characters</div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="password_confirmation" class="form-label">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-secondary border-secondary">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                    <input type="password" class="form-control" id="password_confirmation" required placeholder="Confirm password">
+                                    <button type="button" class="btn btn-outline-secondary toggle-password" tabindex="-1">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Role Selection -->
+                            <div class="mb-3">
+                                <label class="form-label">Account Type</label>
+                                <div class="role-selection">
+                                    <div class="form-check role-option">
+                                        <input class="form-check-input" type="radio" name="role" id="role-user" value="user" checked>
+                                        <label class="form-check-label" for="role-user">
+                                            <i class="fas fa-eye me-2"></i><strong>Viewer</strong>
+                                            <small class="d-block text-muted">Watch videos, like, comment</small>
+                                        </label>
+                                    </div>
+                                    <div class="form-check role-option">
+                                        <input class="form-check-input" type="radio" name="role" id="role-creator" value="creator">
+                                        <label class="form-check-label" for="role-creator">
+                                            <i class="fas fa-video me-2"></i><strong>Creator</strong>
+                                            <small class="d-block text-muted">Upload videos & content</small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input class="form-check-input" type="checkbox" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="text-yellow">Terms of Service</a>
+                                </label>
+                            </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-danger btn-lg" id="submit-btn">
+                            <span class="normal-text">Create Account</span>
+                            <span class="loading-text" style="display: none;">
+                                <span class="spinner-border spinner-border-sm me-2"></span>Creating...
+                            </span>
+                        </button>
+                    </div>
+                        </form>
+
+                        <div class="text-center mt-4">
+                            <p class="mb-0">Already have an account? <a href="login.html" class="text-yellow text-decoration-none">Login here</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error display area for validation errors -->
+    <div id="validation-errors" class="container mt-3" style="display: none;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('register-form');
+            const submitBtn = document.getElementById('submit-btn');
+            const togglePasswordBtns = document.querySelectorAll('.toggle-password');
+            const validationErrorsDiv = document.getElementById('validation-errors');
+
+            // Toggle password visibility
+            togglePasswordBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const input = this.parentElement.querySelector('input');
+                    const icon = this.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.remove('fa-eye');
+                        icon.classList.add('fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.remove('fa-eye-slash');
+                        icon.classList.add('fa-eye');
+                    }
+                });
+            });
+
+            /**
+             * Show validation errors from API response
+             * @param {object} errors - Object containing field-specific errors
+             * @param {string} message - General error message
+             */
+            function showValidationErrors(errors, message) {
+                let html = '';
+
+                if (message) {
+                    html += `<div class="alert alert-danger alert-dismissible fade show">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>`;
+                }
+
+                if (errors && typeof errors === 'object') {
+                    html += '<div class="alert alert-warning alert-dismissible fade show">';
+                    html += '<ul class="mb-0">';
+
+                    for (const [field, fieldErrors] of Object.entries(errors)) {
+                        if (Array.isArray(fieldErrors)) {
+                            fieldErrors.forEach(error => {
+                                // Capitalize first letter of field name
+                                const fieldName = field.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                                html += `<li><strong>${fieldName}:</strong> ${error}</li>`;
+                            });
+                        } else if (typeof fieldErrors === 'string') {
+                            html += `<li>${fieldErrors}</li>`;
+                        }
+                    }
+
+                    html += '</ul></div>';
+                }
+
+                validationErrorsDiv.innerHTML = html;
+                validationErrorsDiv.style.display = 'block';
+
+                // Auto-hide after 10 seconds
+                setTimeout(() => {
+                    validationErrorsDiv.style.display = 'none';
+                }, 10000);
+            }
+
+            // Clear validation errors when user starts typing
+            ['name', 'email', 'password', 'password_confirmation'].forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    input.addEventListener('input', () => {
+                        validationErrorsDiv.style.display = 'none';
+                    });
+                }
+            });
+
+            // Form submission
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('name').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value;
+                const passwordConfirmation = document.getElementById('password_confirmation').value;
+                const terms = document.getElementById('terms').checked;
+                const userRole = document.querySelector('input[name="role"]:checked').value;
+
+                // Basic validation (client-side)
+                if (!name || name.length < 2) {
+                    showAlert('Please enter a valid name (at least 2 characters)', 'danger');
+                    return;
+                }
+
+                if (!email || !email.includes('@')) {
+                    showAlert('Please enter a valid email address', 'danger');
+                    return;
+                }
+
+                if (password.length < 8) {
+                    showAlert('Password must be at least 8 characters', 'danger');
+                    return;
+                }
+
+                if (password !== passwordConfirmation) {
+                    showAlert('Passwords do not match', 'danger');
+                    return;
+                }
+
+                if (!terms) {
+                    showAlert('Please accept the Terms of Service', 'danger');
+                    return;
+                }
+
+                // Disable button and show loading
+                submitBtn.disabled = true;
+                submitBtn.querySelector('.normal-text').style.display = 'none';
+                submitBtn.querySelector('.loading-text').style.display = 'inline';
+
+                try {
+                    // Use the register function from app.js
+                    await register(name, email, password, passwordConfirmation, userRole);
+
+                    // Success - show message and redirect to login
+                    const roleLabel = userRole === 'creator' ? 'Creator' : 'Viewer';
+                    showAlert(`Account created successfully as ${roleLabel}! Redirecting to login...`, 'success');
+
+                    // Redirect handled by register() function with 1.5s delay
+                } catch (error) {
+                    // Check if this is a validation error (422 status)
+                    const errorMessage = error.message || 'Registration failed. Please try again.';
+
+                    // Try to parse validation errors from the error
+                    // The apiRequest function throws errors, so we need to check if it contains validation info
+                    // Since the API returns JSON with 'errors' field, we might need to handle it differently
+
+                    // Show general error first
+                    showAlert(errorMessage, 'danger');
+
+                    // If the error message contains validation info, display it
+                    if (errorMessage.toLowerCase().includes('validation') || errorMessage.includes('422')) {
+                        showValidationErrors({}, 'Please check the form for errors and try again.');
+                    }
+
+                    // Re-enable button
+                    submitBtn.disabled = false;
+                    submitBtn.querySelector('.normal-text').style.display = 'inline';
+                    submitBtn.querySelector('.loading-text').style.display = 'none';
+                }
+            });
+
+            // Check if already logged in
+            if (isAuthenticated()) {
+                window.location.href = 'dashboard.html';
+            }
+        });
+    </script>
+</body>
+</html>
+

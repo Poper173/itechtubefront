@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Favorites - iTechTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+        }
+        .like-btn.liked {
+            color: var(--primary-red) !important;
+        }
+        .like-btn.liked i {
+            color: var(--primary-red);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-play-circle text-yellow me-2"></i>
+                <span class="logo">iTechTube</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="logout-btn">
+                            <i class="fas fa-sign-out-alt me-1"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Favorites Content -->
+    <div class="container mt-4">
+        <!-- Page Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="text-yellow mb-1">
+                    <i class="fas fa-heart me-2"></i>My Favorites
+                </h2>
+                <p class="text-muted mb-0">Videos you've liked</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-light" onclick="loadFavorites()">
+                    <i class="fas fa-sync-alt me-1"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <ul class="nav nav-tabs mb-4" id="favorites-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" onclick="filterFavorites('all', this)">
+                    All <span class="badge bg-danger ms-1" id="count-all">0</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" onclick="filterFavorites('recent', this)">
+                    Recent <span class="badge bg-secondary ms-1" id="count-recent">0</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- Videos Grid -->
+        <div class="row" id="favorites-container">
+            <div class="col-12 text-center text-muted py-5">
+                <div class="loading"></div>
+                <p class="mt-3">Loading your favorites...</p>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div class="empty-state bg-dark rounded" id="empty-state" style="display: none;">
+            <i class="fas fa-heart text-muted"></i>
+            <h3 class="text-white mt-3">No favorites yet</h3>
+            <p class="text-muted">Videos you like will appear here</p>
+            <a href="index.html" class="btn btn-danger mt-3">
+                <i class="fas fa-search me-1"></i> Browse Videos
+            </a>
+        </div>
+
+        <!-- Login Required -->
+        <div class="empty-state bg-dark rounded" id="login-required" style="display: none;">
+            <i class="fas fa-user-lock text-muted"></i>
+            <h3 class="text-white mt-3">Login Required</h3>
+            <p class="text-muted">Please login to view your favorites</p>
+            <a href="login.html" class="btn btn-danger mt-3">
+                <i class="fas fa-sign-in-alt me-1"></i> Login
+            </a>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toast-container"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let likedVideos = [];
+        let currentPage = 1;
+
+        // Initialize favorites page
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check authentication
+            if (!isAuthenticated()) {
+                document.getElementById('favorites-container').style.display = 'none';
+                document.getElementById('login-required').style.display = 'block';
+                return;
+            }
+
+            // Setup logout handler
+            document.getElementById('logout-btn').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+
+            // Load favorites from API
+            await loadFavorites();
+        });
+
+        // Load liked videos from API
+        async function loadFavorites(page = 1) {
+            const container = document.getElementById('favorites-container');
+            container.innerHTML = '<div class="col-12 text-center text-muted"><div class="loading"></div><p class="mt-3">Loading...</p></div>';
+
+            try {
+                // Load from API
+                const response = await loadLikedVideos(page);
+
+                if (response && response.data) {
+                    likedVideos = response.data;
+                    updateFavoritesUI(likedVideos, response.meta);
+                } else {
+                    likedVideos = [];
+                    updateFavoritesUI([]);
+                }
+
+            } catch (error) {
+                console.error('Error loading favorites:', error);
+                container.innerHTML = '<div class="col-12 text-center text-danger">Error loading favorites. Please login again.</div>';
+            }
+        }
+
+        // Update UI with videos and pagination
+        function updateFavoritesUI(videos, meta = null) {
+            const container = document.getElementById('favorites-container');
+            const emptyState = document.getElementById('empty-state');
+
+            // Update counts
+            document.getElementById('count-all').textContent = meta?.total || likedVideos.length;
+
+            if (!videos || videos.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'flex';
+            emptyState.style.display = 'none';
+
+            container.innerHTML = videos.map(video => createVideoCard(video, true)).join('');
+
+            // Add pagination if there are more pages
+            if (meta && meta.last_page > 1) {
+                container.innerHTML += `
+                    <div class="col-12 text-center mt-4">
+                        <button class="btn btn-outline-light" onclick="loadMoreLikedVideos()">
+                            Load More <span class="badge bg-danger ms-2">${meta.total - (meta.current_page * 12)} more</span>
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Load more liked videos (pagination)
+        async function loadMoreLikedVideos() {
+            currentPage++;
+            const container = document.getElementById('favorites-container');
+            const loadMoreBtn = container.querySelector('button');
+
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = true;
+                loadMoreBtn.innerHTML = '<span class="loading"></span> Loading...';
+            }
+
+            try {
+                const response = await loadLikedVideos(currentPage);
+
+                if (response && response.data) {
+                    likedVideos = [...likedVideos, ...response.data];
+                    updateFavoritesUI(likedVideos, response.meta);
+                }
+            } catch (error) {
+                console.error('Error loading more favorites:', error);
+                currentPage--;
+                if (loadMoreBtn) {
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerHTML = 'Load More';
+                }
+            }
+        }
+
+        // Create video card with like button
+        function createVideoCard(video, showActions = false) {
+            const thumbnail = getVideoThumbnail(video);
+
+            const userName = video.user?.name || 'Unknown User';
+            const views = formatNumber(video.views_count || 0);
+            const duration = formatDuration(video.duration);
+
+            let actionsHtml = '';
+            if (showActions) {
+                actionsHtml = `
+                    <div class="video-actions mt-2">
+                        <a href="video.html?id=${video.id}" class="btn btn-sm btn-danger">Watch</a>
+                        <button class="btn btn-sm btn-outline-light like-btn liked" onclick="unlikeVideo(${video.id})">
+                            <i class="fas fa-heart"></i> Liked
+                        </button>
+                    </div>
+                `;
+            }
+
+            return `
+                <div class="col-md-4 video-card">
+                    <div class="card h-100">
+                        <a href="video.html?id=${video.id}">
+                            <img src="${thumbnail}" class="card-img-top video-thumbnail" alt="${escapeHtml(video.title)}">
+                        </a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title video-title">
+                                <a href="video.html?id=${video.id}" class="text-decoration-none text-white">
+                                    ${escapeHtml(video.title)}
+                                </a>
+                            </h5>
+                            <p class="card-text flex-grow-1 small text-muted">
+                                ${video.description ? escapeHtml(video.description.substring(0, 80)) + '...' : 'No description'}
+                            </p>
+                            <div class="video-meta small">
+                                <span>${views} views</span>
+                                <span class="ms-2">${userName}</span>
+                            </div>
+                            <div class="video-duration small text-yellow mt-1">
+                                ${duration}
+                            </div>
+                            ${actionsHtml}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Unlike video and reload from API
+        async function unlikeVideo(videoId) {
+            try {
+                await toggleLike(videoId);
+                showToast('Removed from favorites', 'info');
+
+                // Reload from API
+                currentPage = 1;
+                await loadFavorites();
+            } catch (error) {
+                showAlert('Failed to remove from favorites: ' + error.message, 'danger');
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast align-items-center text-bg-${type} border-0`;
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">${message}</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            `;
+            container.appendChild(toast);
+            const bsToast = new bootstrap.Toast(toast);
+            bsToast.show();
+            toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
+    </script>
+</body>
+</html>
+

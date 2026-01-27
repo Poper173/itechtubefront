@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playlist - iTechTube</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-black">
+        <div class="container">
+            <a class="navbar-brand" href="index.html">
+                <span class="logo">iTechTube</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">Home</a>
+                    </li>
+                    <li class="nav-item" id="dashboard-link" style="display: none;">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav" id="auth-nav-links">
+                    <li class="nav-item">
+                        <a class="nav-link" href="login.html">Login</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="register.html">Register</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav d-none" id="user-nav-menu">
+                    <li class="nav-item">
+                        <a class="nav-link" href="dashboard.html">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="playlist-logout-btn">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Playlist Content -->
+    <div class="container mt-4">
+        <!-- Playlist Header -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card bg-dark">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h2 class="text-yellow" id="playlist-name">Loading...</h2>
+                                <p class="text-muted" id="playlist-description">Loading...</p>
+                                <div class="mt-2">
+                                    <span id="playlist-video-count" class="me-3">0 videos</span>
+                                    <span id="playlist-visibility" class="badge bg-secondary">Loading...</span>
+                                    <span id="playlist-owner" class="text-muted ms-2"></span>
+                                </div>
+                            </div>
+                            <div id="playlist-actions" class="d-none">
+                                <button class="btn btn-danger me-2" onclick="shufflePlaylist()">
+                                    🔀 Shuffle
+                                </button>
+                                <button class="btn btn-outline-light" onclick="sharePlaylist()">
+                                    🔗 Share
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Videos List -->
+        <div class="row">
+            <div class="col-md-12">
+                <h4 class="text-yellow mb-3">Videos</h4>
+                <div class="playlist-videos-list" id="playlist-videos-container">
+                    <div class="text-center text-muted">
+                        <div class="loading"></div>
+                        <p>Loading videos...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="text-center py-5" style="display: none;">
+            <h4 class="text-muted">This playlist has no videos</h4>
+            <p class="text-muted">Add videos to this playlist from the video pages.</p>
+            <a href="index.html" class="btn btn-danger">Browse Videos</a>
+        </div>
+    </div>
+
+    <!-- Share Modal -->
+    <div class="modal fade" id="shareModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-white">
+                <div class="modal-header">
+                    <h5 class="modal-title text-yellow">Share Playlist</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Copy the link below to share this playlist:</p>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="share-url" readonly>
+                        <button class="btn btn-danger" onclick="copyShareUrl()">Copy</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentPlaylist = null;
+        let currentPlaylistId = null;
+        let isOwner = false;
+
+        // Get playlist ID from URL
+        function getPlaylistIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        // Initialize playlist page
+        document.addEventListener('DOMContentLoaded', async function() {
+            currentPlaylistId = getPlaylistIdFromUrl();
+
+            if (!currentPlaylistId) {
+                showAlert('No playlist specified', 'danger');
+                setTimeout(() => window.location.href = 'index.html', 2000);
+                return;
+            }
+
+            updateAuthUI();
+
+            // Load playlist data
+            await loadPlaylistPage();
+
+            // Setup logout handler
+            document.getElementById('playlist-logout-btn')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+        });
+
+        async function loadPlaylistPage() {
+            try {
+                currentPlaylist = await loadPlaylist(currentPlaylistId);
+
+                if (!currentPlaylist) {
+                    showAlert('Playlist not found', 'danger');
+                    setTimeout(() => window.location.href = 'index.html', 2000);
+                    return;
+                }
+
+                // Update page title
+                document.title = `${currentPlaylist.name} - iTechTube`;
+
+                // Update playlist info
+                document.getElementById('playlist-name').textContent = currentPlaylist.name;
+                document.getElementById('playlist-description').textContent = currentPlaylist.description || 'No description';
+                document.getElementById('playlist-video-count').textContent = `${currentPlaylist.videos?.length || 0} videos`;
+
+                const visibilityBadge = document.getElementById('playlist-visibility');
+                if (currentPlaylist.is_public) {
+                    visibilityBadge.textContent = 'Public';
+                    visibilityBadge.className = 'badge bg-success';
+                } else {
+                    visibilityBadge.textContent = 'Private';
+                    visibilityBadge.className = 'badge bg-secondary';
+                }
+
+                if (currentPlaylist.user) {
+                    document.getElementById('playlist-owner').textContent = `Created by ${currentPlaylist.user.name}`;
+
+                    // Check if current user is owner
+                    const currentUser = getCurrentUser();
+                    if (currentUser && currentUser.id === currentPlaylist.user.id) {
+                        isOwner = true;
+                        document.getElementById('playlist-actions').classList.remove('d-none');
+                    }
+                }
+
+                // Render videos
+                renderPlaylistVideosList(currentPlaylist);
+
+            } catch (error) {
+                console.error('Error loading playlist:', error);
+                showAlert('Error loading playlist: ' + error.message, 'danger');
+            }
+        }
+
+        function renderPlaylistVideosList(playlist) {
+            const container = document.getElementById('playlist-videos-container');
+            const emptyState = document.getElementById('empty-state');
+
+            if (!playlist.videos || playlist.videos.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            container.innerHTML = playlist.videos.map((item, index) => {
+                const video = item.video;
+                const thumbnail = video.thumbnail_path
+                    ? `${STORAGE_URL}/${video.thumbnail_path}`
+                    : 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="112" viewBox="0 0 200 112"><rect fill="%23333" width="200" height="112"/><text fill="%23666" font-family="Arial" font-size="12" x="50%" y="50%" text-anchor="middle">No Thumbnail</text></svg>';
+
+                const duration = formatDuration(video.duration);
+                const views = formatNumber(video.views_count || 0);
+
+                return `
+                    <div class="card mb-2 bg-dark">
+                        <div class="row g-0 align-items-center">
+                            <div class="col-auto text-center" style="min-width: 60px;">
+                                <span class="h4 text-muted">${index + 1}</span>
+                            </div>
+                            <div class="col-3 col-md-2">
+                                <a href="video.html?id=${video.id}">
+                                    <img src="${thumbnail}" class="img-fluid rounded" style="width: 100%; height: 80px; object-fit: cover;">
+                                </a>
+                            </div>
+                            <div class="col">
+                                <div class="card-body py-2">
+                                    <h6 class="card-title mb-1">
+                                        <a href="video.html?id=${video.id}" class="text-decoration-none text-white">
+                                            ${escapeHtml(video.title)}
+                                        </a>
+                                    </h6>
+                                    <p class="card-text small text-muted mb-1">
+                                        ${video.user?.name || 'Unknown'}
+                                    </p>
+                                    <small class="text-muted">${views} views • ${duration}</small>
+                                </div>
+                            </div>
+                            ${isOwner ? `
+                                <div class="col-auto pe-3">
+                                    <button class="btn btn-sm btn-outline-danger" onclick="removeVideoFromPlaylistHandler(${video.id})">
+                                        🗑️
+                                    </button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Shuffle playlist
+        function shufflePlaylist() {
+            if (!currentPlaylist?.videos?.length) return;
+
+            const videos = [...currentPlaylist.videos];
+            for (let i = videos.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [videos[i], videos[j]] = [videos[j], videos[i]];
+            }
+            currentPlaylist.videos = videos;
+            renderPlaylistVideosList(currentPlaylist);
+            showAlert('Playlist shuffled!', 'success');
+        }
+
+        // Share playlist
+        function sharePlaylist() {
+            const shareUrl = window.location.href;
+            document.getElementById('share-url').value = shareUrl;
+            const modal = new bootstrap.Modal(document.getElementById('shareModal'));
+            modal.show();
+        }
+
+        function copyShareUrl() {
+            const shareUrl = document.getElementById('share-url');
+            shareUrl.select();
+            document.execCommand('copy');
+            showAlert('Link copied to clipboard!', 'success');
+        }
+
+        // Remove video from playlist (for owners)
+        async function removeVideoFromPlaylistHandler(videoId) {
+            if (!confirm('Remove this video from the playlist?')) return;
+
+            try {
+                await removeVideoFromPlaylist(currentPlaylistId, videoId);
+
+                // Remove from local data and re-render
+                currentPlaylist.videos = currentPlaylist.videos.filter(item => item.video.id !== videoId);
+                renderPlaylistVideosList(currentPlaylist);
+
+                // Update count
+                document.getElementById('playlist-video-count').textContent = `${currentPlaylist.videos.length} videos`;
+
+            } catch (error) {
+                showAlert('Failed to remove video: ' + error.message, 'danger');
+            }
+        }
+    </script>
+</body>
+</html>
+
